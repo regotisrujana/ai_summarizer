@@ -1,0 +1,13 @@
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+groq==0.13.0
+pymongo==4.10.1
+newspaper3k==0.2.8
+beautifulsoup4==4.12.3
+python-dotenv==1.0.1
+lxml==5.3.0
+lxml_html_clean==0.4.1
+requests==2.32.3
+pydantic==2.10.3
+nltk==3.9.1
+youtube-transcript-api==1.2.4
