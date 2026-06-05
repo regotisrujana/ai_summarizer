@@ -1,86 +1,94 @@
-# AI Summarizer and Domain-Specific RAG Chatbot
+# AI Content Summarizer
 
-Full stack AI project with two modes:
+Beginner-friendly full stack app: paste text or a URL, get an AI summary (Groq), stored in MongoDB.
 
-- Summarize pasted text, article URLs, or YouTube transcripts with Groq.
-- Chat with a domain-specific RAG knowledge base about AI summarization and retrieval systems.
+## Folder structure
 
-The RAG project includes 50 source documents, source citations, retrieval accuracy evaluation, and answer quality scoring.
-
-## Project structure
-
-```text
+```
 ai_summarizer/
-  backend/
-    app.py                    # FastAPI routes
-    rag.py                    # BM25 retrieval, answer generation, evaluation
-    data/
-      rag_documents.json      # 50 source documents
-      rag_eval.json           # evaluation questions and reference answers
-    scraper.py                # URL and YouTube scraping
-    database.py               # MongoDB save
-    requirements.txt
-    .env.example
-  frontend/
-    src/
-      App.jsx                 # Summarizer, RAG chat, evaluation UI
-      api.js                  # Axios API helper
-      main.jsx
-    package.json
-    .env.example
-  README.md
+├── backend/
+│   ├── app.py           # FastAPI + POST /summarize
+│   ├── scraper.py       # URL scraping (newspaper3k)
+│   ├── database.py      # MongoDB save
+│   ├── requirements.txt
+│   └── .env             # GROQ_API_KEY, MONGO_URI (create from .env.example)
+├── frontend/
+│   ├── src/
+│   │   ├── App.jsx      # Single-page UI
+│   │   ├── main.jsx
+│   │   └── api.js       # Axios calls
+│   ├── package.json
+│   └── .env             # VITE_API_URL (create from .env.example)
+└── README.md
 ```
 
-## Features
+---
 
-- FastAPI backend
-- React and Vite frontend
-- Groq-powered summarization
-- Domain-specific RAG chatbot
-- 50-document local knowledge base
-- BM25 keyword retrieval
-- Source citations with document ids, titles, categories, and scores
-- Evaluation metrics:
-  - Top-1 retrieval accuracy
-  - Top-3 retrieval accuracy
-  - Mean reciprocal rank
-  - Answer quality F1 against reference answers
+## 1. MongoDB Atlas setup (~5 min)
 
-## Backend setup
+1. Go to [https://www.mongodb.com/cloud/atlas](https://www.mongodb.com/cloud/atlas) and create a free account.
+2. Create a **free M0 cluster**.
+3. **Database Access** → Add user (username + password). Save the password.
+4. **Network Access** → Add IP → **Allow Access from Anywhere** (`0.0.0.0/0`) for dev/deploy simplicity.
+5. **Database** → Connect → **Drivers** → copy the connection string.
+6. Replace `<password>` with your user password and add a database name before `?`:
+
+   ```
+   mongodb+srv://USER:PASSWORD@cluster0.xxxxx.mongodb.net/ai_summarizer?retryWrites=true&w=majority
+   ```
+
+7. Collection `summaries` is created automatically on first save.
+
+---
+
+## 2. Groq API key
+
+1. Sign up at [https://console.groq.com](https://console.groq.com).
+2. Create an API key.
+3. Model used: `llama-3.1-8b-instant` (replaces decommissioned `llama3-8b-8192`).
+
+---
+
+## 3. Backend setup
 
 ```bash
 cd backend
 python -m venv venv
+
+# Windows
 venv\Scripts\activate
+
+# macOS/Linux
+source venv/bin/activate
+
 pip install -r requirements.txt
-copy .env.example .env
+copy .env.example .env   # Windows — or: cp .env.example .env
 ```
 
 Edit `backend/.env`:
 
 ```env
-GROQ_API_KEY=your_groq_api_key_here
-MONGO_URI=mongodb+srv://user:password@cluster.mongodb.net/ai_summarizer?retryWrites=true&w=majority
+GROQ_API_KEY=gsk_...
+MONGO_URI=mongodb+srv://...
 ```
 
-Run the backend:
+Run:
 
 ```bash
 uvicorn app:app --reload --host 0.0.0.0 --port 8000
 ```
 
-API docs:
+API: [http://localhost:8000](http://localhost:8000)  
+Docs: [http://localhost:8000/docs](http://localhost:8000/docs)
 
-```text
-http://localhost:8000/docs
-```
+---
 
-## Frontend setup
+## 4. Frontend setup
 
 ```bash
 cd frontend
 npm install
-copy .env.example .env
+copy .env.example .env   # Windows
 ```
 
 Edit `frontend/.env`:
@@ -95,25 +103,13 @@ Run:
 npm run dev
 ```
 
-Open:
+Open [http://localhost:5173](http://localhost:5173).
 
-```text
-http://localhost:5173
-```
+---
 
-## API endpoints
+## API: POST /summarize
 
-### Health
-
-```text
-GET /
-```
-
-### Summarization
-
-```text
-POST /summarize
-```
+**Request**
 
 ```json
 {
@@ -122,106 +118,80 @@ POST /summarize
 }
 ```
 
-### RAG chatbot
+- If `url` is set → scrape and summarize (URL wins over text).
+- Else → summarize `text`.
+- Returns **all important points** as a bullet list (no short/medium/long).
 
-```text
-POST /chat
-```
-
-```json
-{
-  "question": "How can retrieval accuracy be evaluated?",
-  "top_k": 3
-}
-```
-
-Response includes:
+**Response**
 
 ```json
 {
-  "answer": "Generated answer with citations.",
-  "sources": [
-    {
-      "id": "D013",
-      "title": "Retrieval Accuracy",
-      "category": "evaluation",
-      "text": "Source text...",
-      "score": 4.21
-    }
-  ]
+  "summary": "- point one\n- point two\n..."
 }
 ```
 
-### RAG evaluation
+---
 
-```text
-GET /rag/evaluate
+## Deploy backend (Render)
+
+1. Push this repo to GitHub.
+2. [https://dashboard.render.com](https://dashboard.render.com) → **New +** → **Web Service**.
+3. Connect the repo.
+4. Settings:
+   - **Root Directory:** `backend`
+   - **Runtime:** Python 3
+   - **Build Command:** `pip install -r requirements.txt`
+   - **Start Command:** `uvicorn app:app --host 0.0.0.0 --port $PORT`
+5. **Environment Variables:**
+   - `GROQ_API_KEY` = your key
+   - `MONGO_URI` = Atlas connection string
+6. Deploy. Copy the service URL (e.g. `https://ai-summarizer-xxxx.onrender.com`).
+
+Free tier may sleep; first request can take ~30s.
+
+---
+
+## Deploy frontend (Vercel)
+
+1. [https://vercel.com](https://vercel.com) → **Add New Project** → import GitHub repo.
+2. Settings:
+   - **Root Directory:** `frontend`
+   - **Framework Preset:** Vite
+   - **Build Command:** `npm run build`
+   - **Output Directory:** `dist`
+3. **Environment Variable:**
+   - `VITE_API_URL` = your Render URL (no trailing slash), e.g. `https://ai-summarizer-xxxx.onrender.com`
+4. Deploy.
+
+Test: open Vercel URL → paste text or URL → **Summarize**.
+
+---
+
+## Quick test (curl)
+
+```bash
+curl -X POST http://localhost:8000/summarize ^
+  -H "Content-Type: application/json" ^
+  -d "{\"text\":\"Python is a popular programming language used for web apps, data science, and automation.\",\"url\":\"\"}"
 ```
 
-Returns document count, question count, top-1 accuracy, top-3 accuracy, MRR, answer F1, and per-question results.
+(macOS/Linux: use `\` instead of `^` for line breaks, or single line.)
 
-## Deploy backend on Render
-
-Create a Render Web Service:
-
-```text
-Root Directory: backend
-Runtime: Python
-Build Command: pip install -r requirements.txt
-Start Command: uvicorn app:app --host 0.0.0.0 --port $PORT
-```
-
-Environment variables:
-
-```text
-PYTHON_VERSION=3.11.9
-GROQ_API_KEY=your Groq key
-MONGO_URI=your MongoDB URI
-```
-
-Use Python 3.11.9 to avoid package build issues with newer Python versions.
-
-## Deploy frontend on Render
-
-Create a Render Static Site:
-
-```text
-Root Directory: frontend
-Build Command: npm install && npm run build
-Publish Directory: dist
-```
-
-Environment variable:
-
-```text
-VITE_API_URL=https://your-backend-service.onrender.com
-```
-
-After changing `VITE_API_URL`, redeploy the frontend because Vite reads this value at build time.
-
-## Project requirement mapping
-
-Requirement: Build a domain-specific RAG chatbot with at least 50 source documents; evaluate retrieval accuracy and answer quality.
-
-Implemented:
-
-- Domain: AI summarization and RAG systems
-- Source documents: `backend/data/rag_documents.json` contains 50 documents
-- Chatbot: `POST /chat` and the RAG Chat tab in the frontend
-- Retrieval accuracy: top-1, top-3, and MRR in `GET /rag/evaluate`
-- Answer quality: token F1 against reference answers in `GET /rag/evaluate`
-- UI: Evaluation tab displays metrics and per-question results
+---
 
 ## Troubleshooting
 
 | Issue | Fix |
-| --- | --- |
-| Render metadata-generation-failed | Set `PYTHON_VERSION=3.11.9`, then clear build cache and redeploy |
-| Frontend cannot reach backend | Set `VITE_API_URL` to the backend Render URL |
-| MongoDB save warning | Check `MONGO_URI` and Atlas network access |
-| Groq key error | Add `GROQ_API_KEY` to backend environment variables |
-| First Render request is slow | Free services may sleep; wait and retry |
+|--------|-----|
+| CORS / network error | Set `VITE_API_URL` to exact Render HTTPS URL |
+| MongoDB error | Include DB name in URI: `.../ai_summarizer?...` |
+| URL scrape fails | Some sites block bots; paste text instead |
+| YouTube fails | Enable CC/subtitles on the video; upgrade backend (`pip install youtube-transcript-api==1.2.4`) |
+| Groq model error | Check [Groq models](https://console.groq.com/docs/models); update `model` in `app.py` if retired |
+| Render cold start | Wait and retry first request |
+
+---
 
 ## License
 
-MIT
+MIT — use freely for learning and portfolios.

@@ -12,16 +12,3 @@ export async function summarizeContent({ text, url }) {
   });
   return response.data;
 }
-
-export async function askRagChatbot({ question, topK = 3 }) {
-  const response = await axios.post(`${API_URL}/chat`, {
-    question,
-    top_k: topK,
-  });
-  return response.data;
-}
-
-export async function evaluateRag() {
-  const response = await axios.get(`${API_URL}/rag/evaluate`);
-  return response.data;
-}
