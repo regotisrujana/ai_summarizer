@@ -1,0 +1,14 @@
+[
+  {"question":"What is the difference between extractive and abstractive summarization?","expected_doc_ids":["D001","D002"],"reference_answer":"Extractive summarization selects original sentences, while abstractive summarization generates new wording and can combine ideas but may hallucinate."},
+  {"question":"Why is chunk overlap useful in RAG?","expected_doc_ids":["D004"],"reference_answer":"Chunk overlap repeats nearby text between chunks so important facts are not lost at boundaries."},
+  {"question":"What does BM25 reward when ranking documents?","expected_doc_ids":["D006","D024"],"reference_answer":"BM25 rewards rare query terms, term frequency, and length-normalized document matches."},
+  {"question":"How do citations improve a RAG chatbot?","expected_doc_ids":["D011"],"reference_answer":"Citations show which source documents support the answer and make the response easier to verify."},
+  {"question":"Which metrics can evaluate retrieval accuracy?","expected_doc_ids":["D013","D025","D026","D027"],"reference_answer":"Retrieval can be evaluated with top-1 accuracy, top-k accuracy, mean reciprocal rank, precision, and recall."},
+  {"question":"How can answer quality be evaluated automatically?","expected_doc_ids":["D014","D028"],"reference_answer":"Answer quality can be compared with a reference answer using token precision, recall, and F1."},
+  {"question":"What should a grounded chatbot do when sources are insufficient?","expected_doc_ids":["D010","D033"],"reference_answer":"It should say it does not know or ask for clarification instead of guessing."},
+  {"question":"Why are source documents cleaned before indexing?","expected_doc_ids":["D019"],"reference_answer":"Cleaning removes boilerplate, ads, duplicate text, broken characters, and irrelevant metadata to improve retrieval and answer quality."},
+  {"question":"What is the purpose of a RAG evaluation dataset?","expected_doc_ids":["D038"],"reference_answer":"It stores questions, expected source document identifiers, and reference answers for repeatable evaluation."},
+  {"question":"How should API keys be handled during deployment?","expected_doc_ids":["D042","D049"],"reference_answer":"API keys should be stored as environment variables and never committed into source code."},
+  {"question":"What Render service types should be used for this project?","expected_doc_ids":["D050"],"reference_answer":"The FastAPI backend should run as a Render web service, and the Vite React frontend can run as a static site."},
+  {"question":"Why combine keyword and embedding retrieval?","expected_doc_ids":["D007"],"reference_answer":"Hybrid retrieval combines exact keyword matching for names and acronyms with semantic matching for paraphrases."}
+]

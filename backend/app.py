@@ -11,6 +11,7 @@ from groq import Groq
 from pydantic import BaseModel
 
 from database import save_summary
+from rag import rag_engine
 from scraper import scrape_url
 
 load_dotenv()
@@ -60,9 +61,14 @@ class SummarizeRequest(BaseModel):
     url: str = ""
 
 
+class ChatRequest(BaseModel):
+    question: str
+    top_k: int = 3
+
+
 @app.get("/")
 def health():
-    return {"status": "ok"}
+    return {"status": "ok", "features": ["summarization", "rag_chatbot"]}
 
 
 @app.post("/summarize")
@@ -106,6 +112,21 @@ def summarize(request: SummarizeRequest):
         print(f"MongoDB save warning: {exc}")
 
     return {"summary": summary}
+
+
+@app.post("/chat")
+def chat(request: ChatRequest):
+    question = request.question.strip()
+    if not question:
+        raise HTTPException(status_code=400, detail="Question is required.")
+
+    top_k = min(max(request.top_k, 1), 5)
+    return rag_engine.answer(question, top_k=top_k)
+
+
+@app.get("/rag/evaluate")
+def evaluate_rag():
+    return rag_engine.evaluate(top_k=3)
 
 
 def _truncate_chunk(text: str) -> str:
